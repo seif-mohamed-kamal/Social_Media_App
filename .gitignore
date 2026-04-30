@@ -1,0 +1,9 @@
+node_modules/
+.env*
+src/modules/index.ts
+src/config/socialapp-47665-firebase-adminsdk-fbsvc-2194f24be1.json
+src/modules/index.ts
+src/config/config.service.ts
+dist/config/socialapp-47665-firebase-adminsdk-fbsvc-2194f24be1.json
+dist/config/config.service.ts
+dist/config/config.service.js
