@@ -1,2 +1,5 @@
 export * from "./user.interface"
 export * from "./post.intedface"
+export * from "./comment.interface"
+export * from "./paginate.interface"
+export * from "./reaction.interface"

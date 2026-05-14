@@ -1,7 +1,10 @@
 import { HydratedDocument, Schema, Types } from "mongoose";
 import { IPost } from "../../common/interface/post.intedface.js";
-import { AvailabilityEnum } from "../../common/enum/post.enum.js";
+import { AvailabilityEnum, ReactionEnum } from "../../common/enum/post.enum.js";
 import mongoose from "mongoose";
+import { commentModel } from "./comment.model.js";
+import { s3Service } from "../../common/service/s3.service.js";
+import { commentRepository } from "../repository/comment.repository.js";
 
 const postSchema = new Schema<IPost>(
   {
@@ -22,7 +25,21 @@ const postSchema = new Schema<IPost>(
       default: AvailabilityEnum.PUBLIC,
     },
 
-    likes: [{ type: Types.ObjectId, ref: "User" }],
+    reactions: [
+      {
+        userId: {
+          type: Types.ObjectId,
+          ref: "User",
+          required: true,
+        },
+    
+        react: {
+          type: Number,
+          enum: ReactionEnum,
+          required: true,
+        },
+      },
+    ],
     tags: [{ type: Types.ObjectId, ref: "User" }],
 
     updatedBy: { type: Types.ObjectId, ref: "User" },
@@ -41,8 +58,14 @@ const postSchema = new Schema<IPost>(
   }
 );
 
+postSchema.virtual("comments", {
+  localField: "_id",
+  foreignField: "postId",
+  ref: "comment",
+  justOne: true,
+});
 
-postSchema.pre(["find", "findOne"], function () {
+postSchema.pre(["find", "findOne", "countDocuments"], function () {
   const query = this.getQuery();
   if (query.paranoid === false) {
     this.setQuery({ ...query });
@@ -67,13 +90,32 @@ postSchema.pre(["updateOne", "findOneAndUpdate"], function () {
   }
 });
 
-postSchema.pre(["deleteOne", "findOneAndDelete"], function () {
-
+postSchema.pre(["deleteOne", "findOneAndDelete"], async function () {
   const query = this.getQuery();
-  if (query.force === true) {
-    this.setQuery({ ...query });
-  } else {
-    this.setQuery({ deletedAt: { $exists: true }, ...query });
+  const doc = await this.model.findOne(query);
+  if (!doc) return;
+  const commentRepo = new commentRepository();
+  const postId = doc._id;
+  const comments = await commentRepo.find({
+    filter:{
+      postId
+    }
+  });
+
+  for (const comment of comments) {
+
+    if (comment.attachments?.length) {
+      await s3Service.deleteBulkAsset({
+        Keys: comment.attachments.map((ele: string) => ({
+          Key: ele,
+        })),
+      });
+    }
+
+    await commentModel.deleteOne({
+      _id: comment._id,
+      force: true,
+    });
   }
 });
 

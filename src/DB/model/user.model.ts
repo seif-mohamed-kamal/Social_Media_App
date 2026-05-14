@@ -1,11 +1,10 @@
-import mongoose, { HydratedDocument } from "mongoose";
+import mongoose, { HydratedDocument, Types } from "mongoose";
 import { IUser } from "../../common/interface";
-import {
-  GenderEnum,
-  ProviderEnum,
-  RoleEnum,
-} from "../../common/enum";
+import { GenderEnum, ProviderEnum, RoleEnum } from "../../common/enum";
 import { generateEncrypt, generateHash } from "../../common/utils/security";
+import { postRepository } from "../repository";
+import { s3Service } from "../../common/service";
+import { postModel } from "./post.model";
 
 const userSchema = new mongoose.Schema<IUser>(
   {
@@ -58,7 +57,7 @@ const userSchema = new mongoose.Schema<IUser>(
       enum: ProviderEnum,
       default: ProviderEnum.SYSTEM,
     },
-
+    freinds: [{ type: Types.ObjectId, ref: "user" }],
     profilePicture: String,
     coverPictures: [String],
 
@@ -90,7 +89,9 @@ userSchema
     return `${this.firstName} ${this.lastName}`;
   });
 
-userSchema.pre("save",async function (this: HydratedDocument<IUser> & { wasNew: boolean }) {
+userSchema.pre(
+  "save",
+  async function (this: HydratedDocument<IUser> & { wasNew: boolean }) {
     this.wasNew = this.isNew;
     if (this.password && this.isModified("password")) {
       this.password = await generateHash({ plainText: this.password });
@@ -126,15 +127,35 @@ userSchema.pre(["updateOne", "findOneAndUpdate"], function () {
   }
 });
 
-userSchema.pre(["deleteOne", "findOneAndDelete"], function () {
-
+userSchema.pre(["deleteOne", "findOneAndDelete"], async function () {
   const query = this.getQuery();
-  if (query.force === true) {
-    this.setQuery({ ...query });
-  } else {
-    this.setQuery({ deletedAt: { $exists: true }, ...query });
+  const doc = await this.model.findOne(query);
+  if (!doc) return;
+  const postRepo = new postRepository();
+  const userId = doc._id;
+  const comments = await postRepo.find({
+    filter:{
+      createdBy:userId
+    }
+  });
+
+  for (const comment of comments) {
+
+    if (comment.attachments?.length) {
+      await s3Service.deleteBulkAsset({
+        Keys: comment.attachments.map((ele: string) => ({
+          Key: ele,
+        })),
+      });
+    }
+
+    await postModel.deleteOne({
+      _id: comment._id,
+      force: true,
+    });
   }
 });
+
 
 // userSchema.post("save" , async function(){
 //   const that = this as HydratedDocument<IUser> & {wasNew:boolean }

@@ -40,35 +40,30 @@ const express_1 = require("express");
 const middleware_1 = require("../../middleware");
 const multer_1 = require("../../common/utils/multer");
 const validation_middleware_1 = require("../../middleware/validation.middleware");
-const validators = __importStar(require("./post.validation"));
+const validators = __importStar(require("./comment.validation"));
 const response_1 = require("../../common/response");
-const post_service_1 = __importDefault(require("./post.service"));
-const validation_1 = require("../../common/validation");
-const comment_1 = require("../comment");
-const router = (0, express_1.Router)();
-router.use("/:postId/comment", comment_1.commentRouter);
-router.post("/create", (0, middleware_1.authintication)(), (0, multer_1.cloudUpload)({
+const comment_service_1 = __importDefault(require("./comment.service"));
+const router = (0, express_1.Router)({ mergeParams: true });
+router.post("/", (0, middleware_1.authintication)(), (0, multer_1.cloudUpload)({
     validation: multer_1.fileExtention.image,
-}).array("files", 2), (0, validation_middleware_1.validation)(validators.createPostSchema), async (req, res, next) => {
-    const result = await post_service_1.default.createPost({ ...req.body, files: req.files }, req.user);
+}).array("files", 2), (0, validation_middleware_1.validation)(validators.createCommentSchema), async (req, res, next) => {
+    const result = await comment_service_1.default.createComment(req.params, { ...req.body, files: req.files }, req.user);
     return (0, response_1.successResponse)({ res, status: 201, result });
 });
-router.get("/", (0, middleware_1.authintication)(), (0, validation_middleware_1.validation)(validation_1.paginationValidationSchmea), async (req, res, next) => {
-    const result = await post_service_1.default.listPosts(req.query, req.user);
-    return (0, response_1.successResponse)({ res, status: 200, result });
-});
-router.patch("/:postId/react", (0, middleware_1.authintication)(), (0, validation_middleware_1.validation)(validators.reactPostSchema), async (req, res, next) => {
-    const result = await post_service_1.default.reactPost(req.params, req.query, req.user);
-    return (0, response_1.successResponse)({ res, status: 200, result });
-});
-router.delete("/:postId", (0, middleware_1.authintication)(), (0, validation_middleware_1.validation)(validators.deletePostSchema), async (req, res, next) => {
-    const result = await post_service_1.default.deletepost(req.params, req.user);
-    return (0, response_1.successResponse)({ res, status: 204, result });
-});
-router.patch("/:postId", (0, middleware_1.authintication)(), (0, multer_1.cloudUpload)({
+router.post("/:commentId/reply", (0, middleware_1.authintication)(), (0, multer_1.cloudUpload)({
     validation: multer_1.fileExtention.image,
-}).array("files", 2), (0, validation_middleware_1.validation)(validators.updatePostSchema), async (req, res, next) => {
-    const result = await post_service_1.default.updatePost(req.params, { ...req.body, files: req.files }, req.user);
+}).array("files", 2), (0, validation_middleware_1.validation)(validators.createReplyCommentSchema), async (req, res, next) => {
+    const result = await comment_service_1.default.replyOnComment(req.params, { ...req.body, files: req.files }, req.user);
+    return (0, response_1.successResponse)({ res, status: 201, result });
+});
+router.delete("/:commentId", (0, middleware_1.authintication)(), (0, validation_middleware_1.validation)(validators.deleteCommentSchema), async (req, res, next) => {
+    const result = await comment_service_1.default.deleteComment(req.params, req.user);
+    return (0, response_1.successResponse)({ res, status: 201, result });
+});
+router.patch("/:commentId", (0, middleware_1.authintication)(), (0, multer_1.cloudUpload)({
+    validation: multer_1.fileExtention.image,
+}).array("files", 2), (0, validation_middleware_1.validation)(validators.createReplyCommentSchema), async (req, res, next) => {
+    const result = await comment_service_1.default.updateComment(req.params, { ...req.body, files: req.files }, req.user);
     return (0, response_1.successResponse)({ res, status: 201, result });
 });
 exports.default = router;

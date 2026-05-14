@@ -1,20 +1,20 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePostSchema = exports.updatePostSchema = exports.reactPostSchema = exports.createPostSchema = void 0;
+exports.deleteCommentSchema = exports.updateCommentSchema = exports.createReplyCommentSchema = exports.createCommentSchema = void 0;
 const zod_1 = require("zod");
-const post_enum_1 = require("../../common/enum/post.enum");
-const mongoose_1 = require("mongoose");
 const validation_1 = require("../../common/validation");
 const multer_1 = require("../../common/utils/multer");
-exports.createPostSchema = {
+exports.createCommentSchema = {
+    params: zod_1.z.strictObject({
+        postId: validation_1.generalValidationFeilds.id,
+    }),
     body: zod_1.z
         .strictObject({
         content: zod_1.z.string().optional(),
         files: zod_1.z
             .array(validation_1.generalValidationFeilds.file(multer_1.fileExtention.image))
             .optional(),
-        tags: zod_1.z.array(zod_1.z.string()).optional(),
-        availability: zod_1.z.coerce.number().default(post_enum_1.AvailabilityEnum.PUBLIC),
+        tags: zod_1.z.array(validation_1.generalValidationFeilds.id).optional(),
     })
         .superRefine((args, ctx) => {
         if ((!args.files || args.files.length === 0) && !args.content) {
@@ -33,32 +33,25 @@ exports.createPostSchema = {
                     message: "dublicated tags",
                 });
             }
-            for (const tag of args.tags) {
-                if (!mongoose_1.Types.ObjectId.isValid(tag)) {
-                    ctx.addIssue({
-                        code: "custom",
-                        path: ["tags"],
-                        message: "Invalid ObjectId",
-                    });
-                }
-            }
         }
     }),
 };
-exports.reactPostSchema = {
+exports.createReplyCommentSchema = {
     params: zod_1.z.strictObject({
         postId: validation_1.generalValidationFeilds.id,
+        commentId: validation_1.generalValidationFeilds.id,
     }),
-    query: zod_1.z.strictObject({
-        react: zod_1.z.coerce
-            .number()
-            .pipe(zod_1.z.enum(post_enum_1.ReactionEnum)),
+    body: exports.createCommentSchema.body
+};
+exports.updateCommentSchema = {
+    params: zod_1.z.strictObject({
+        commentId: validation_1.generalValidationFeilds.id,
     }),
+    body: exports.createCommentSchema.body
 };
-exports.updatePostSchema = {
-    params: zod_1.z.strictObject({ postId: validation_1.generalValidationFeilds.id }),
-    body: exports.createPostSchema.body,
-};
-exports.deletePostSchema = {
-    params: zod_1.z.strictObject({ postId: validation_1.generalValidationFeilds.id }),
+exports.deleteCommentSchema = {
+    params: zod_1.z.strictObject({
+        commentId: validation_1.generalValidationFeilds.id,
+        postId: validation_1.generalValidationFeilds.id,
+    }),
 };

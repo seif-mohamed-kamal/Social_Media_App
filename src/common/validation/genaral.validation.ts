@@ -1,6 +1,8 @@
+import { Types } from "mongoose";
 import { z } from "zod";
 
 export const generalValidationFeilds = {
+  id:z.string().refine(value => {return Types.ObjectId.isValid(value)} , "Invalid ObjectId"),
   email: z.email(),
   password: z.string(),
   username: z.string(),
@@ -30,3 +32,13 @@ export const generalValidationFeilds = {
       });
   },
 };
+
+export const paginationValidationSchmea = {
+  query: z.strictObject({
+    page: z.coerce.number().optional(),
+    size: z.coerce.number().optional(),
+    search: z.string().optional(),
+  }),
+};
+
+export type paginateDTO = z.infer<typeof paginationValidationSchmea.query>

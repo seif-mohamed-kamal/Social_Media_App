@@ -1,17 +1,17 @@
 import { Types } from "mongoose";
 import { IUser } from "./user.interface.js";
-import { AvailabilityEnum } from "../enum/post.enum.js";
-import { IReaction } from "./reaction.interface.js";
+import { IPost } from "./post.intedface.js";
 
-export interface IPost {
-  folderId: string;
+export interface IComment {
   content?: string;
   attachments?: string[];
+  folderId?: string;
 
-  reactions?: IReaction[];
+  likes?: Types.ObjectId[] | IUser[];
   tags?: Types.ObjectId[] | IUser[];
 
-  availability: AvailabilityEnum;
+  postId:Types.ObjectId | IPost;
+  commentId:Types.ObjectId | IComment;
 
   createdBy: Types.ObjectId | IUser;
   updatedBy?: Types.ObjectId | IUser;

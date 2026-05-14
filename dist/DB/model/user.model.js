@@ -1,12 +1,45 @@
 "use strict";
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || (function () {
+    var ownKeys = function(o) {
+        ownKeys = Object.getOwnPropertyNames || function (o) {
+            var ar = [];
+            for (var k in o) if (Object.prototype.hasOwnProperty.call(o, k)) ar[ar.length] = k;
+            return ar;
+        };
+        return ownKeys(o);
+    };
+    return function (mod) {
+        if (mod && mod.__esModule) return mod;
+        var result = {};
+        if (mod != null) for (var k = ownKeys(mod), i = 0; i < k.length; i++) if (k[i] !== "default") __createBinding(result, mod, k[i]);
+        __setModuleDefault(result, mod);
+        return result;
+    };
+})();
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.userModel = void 0;
-const mongoose_1 = __importDefault(require("mongoose"));
+const mongoose_1 = __importStar(require("mongoose"));
 const enum_1 = require("../../common/enum");
 const security_1 = require("../../common/utils/security");
+const repository_1 = require("../repository");
+const service_1 = require("../../common/service");
+const post_model_1 = require("./post.model");
 const userSchema = new mongoose_1.default.Schema({
     firstName: {
         type: String,
@@ -52,6 +85,7 @@ const userSchema = new mongoose_1.default.Schema({
         enum: enum_1.ProviderEnum,
         default: enum_1.ProviderEnum.SYSTEM,
     },
+    freinds: [{ type: mongoose_1.Types.ObjectId, ref: "user" }],
     profilePicture: String,
     coverPictures: [String],
     confirmEmail: Date,
@@ -113,13 +147,30 @@ userSchema.pre(["updateOne", "findOneAndUpdate"], function () {
         this.setQuery({ deletedAt: { $exists: false }, ...query });
     }
 });
-userSchema.pre(["deleteOne", "findOneAndDelete"], function () {
+userSchema.pre(["deleteOne", "findOneAndDelete"], async function () {
     const query = this.getQuery();
-    if (query.force === true) {
-        this.setQuery({ ...query });
-    }
-    else {
-        this.setQuery({ deletedAt: { $exists: true }, ...query });
+    const doc = await this.model.findOne(query);
+    if (!doc)
+        return;
+    const postRepo = new repository_1.postRepository();
+    const userId = doc._id;
+    const comments = await postRepo.find({
+        filter: {
+            createdBy: userId
+        }
+    });
+    for (const comment of comments) {
+        if (comment.attachments?.length) {
+            await service_1.s3Service.deleteBulkAsset({
+                Keys: comment.attachments.map((ele) => ({
+                    Key: ele,
+                })),
+            });
+        }
+        await post_model_1.postModel.deleteOne({
+            _id: comment._id,
+            force: true,
+        });
     }
 });
 exports.userModel = mongoose_1.default.models.user || mongoose_1.default.model("user", userSchema);

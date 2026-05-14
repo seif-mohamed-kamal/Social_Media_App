@@ -1,8 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.generalValidationFeilds = void 0;
+exports.paginationValidationSchmea = exports.generalValidationFeilds = void 0;
+const mongoose_1 = require("mongoose");
 const zod_1 = require("zod");
 exports.generalValidationFeilds = {
+    id: zod_1.z.string().refine(value => { return mongoose_1.Types.ObjectId.isValid(value); }, "Invalid ObjectId"),
     email: zod_1.z.email(),
     password: zod_1.z.string(),
     username: zod_1.z.string(),
@@ -31,4 +33,11 @@ exports.generalValidationFeilds = {
             }
         });
     },
+};
+exports.paginationValidationSchmea = {
+    query: zod_1.z.strictObject({
+        page: zod_1.z.coerce.number().optional(),
+        size: zod_1.z.coerce.number().optional(),
+        search: zod_1.z.string().optional(),
+    }),
 };

@@ -6,7 +6,6 @@ import {
   HydratedDocument,
   Model,
   ProjectionType,
-  Query,
   QueryFilter,
   QueryOptions,
   ReturnsNewDoc,
@@ -14,7 +13,9 @@ import {
   UpdateQuery,
   UpdateResult,
   UpdateWithAggregationPipeline,
+  
 } from "mongoose";
+import { IPaginate } from "../../common/interface";
 export abstract class DataBaseRepository<T> {
   constructor(protected readonly model: Model<T>) {}
 
@@ -55,7 +56,7 @@ export abstract class DataBaseRepository<T> {
   }: {
     filter?: QueryFilter<T>;
     projection?: ProjectionType<T> | null | undefined;
-    options?: (QueryOptions<T> & { lean: false }) | null | undefined;
+    options?: (QueryOptions<T> & { lean?: false }) | null | undefined;
   }): Promise<HydratedDocument<T> | null>;
   async findOne({
     filter,
@@ -64,7 +65,7 @@ export abstract class DataBaseRepository<T> {
   }: {
     filter?: QueryFilter<T>;
     projection?: ProjectionType<T> | null | undefined;
-    options?: (QueryOptions<T> & { lean: true }) | null | undefined;
+    options?: (QueryOptions<T> & { lean?: true }) | null | undefined;
   }): Promise<null | FlattenMaps<T>>;
   async findOne({
     filter,
@@ -87,11 +88,57 @@ export abstract class DataBaseRepository<T> {
   }: {
     filter?: QueryFilter<T>;
     projection?: ProjectionType<T> | null | undefined;
-    options?: QueryOptions<T> | null | undefined;
+    options?: QueryOptions<T> | null | undefined ;
   }): Promise<HydratedDocument<T>[]> {
     const doc = this.model.find(filter, projection);
     if (options?.lean) doc.lean(options.lean);
+    if (options?.limit) doc.limit(options.limit);
+    if (options?.skip) doc.skip(options.skip);
+    if (options?.populate) doc.populate(options.populate as any);
     return await doc.exec();
+  }
+
+  async paginate({
+    filter,
+    projection,
+    options = {},
+    page = 0,
+    size = 5,
+  }: {
+    filter?: QueryFilter<T>;
+    projection?: ProjectionType<T> | null | undefined;
+    options?: QueryOptions<T>;
+    page?: number | undefined | string;
+    size?: number | undefined | string;
+  }): Promise<IPaginate<T>> {
+    let count: number = -1;
+  
+    if (Number(page) > 0) {
+      page = parseInt(page as string);
+      size = parseInt(size as string);
+  
+      options.skip = (page - 1) * size;
+      options.limit = size;
+  
+      count = await this.model.countDocuments(filter || {});
+    }
+  
+    const docs = await this.find({
+      filter: filter || {},
+      projection,
+      options,
+    });
+  
+    return {
+      docs,
+      ...(Number(page) > 0
+        ? {
+            currentPage: page,
+            size,
+            pages: Math.ceil(count / (size as number)), 
+          }
+        : {}),
+    };
   }
 
   //findById
@@ -149,11 +196,15 @@ export abstract class DataBaseRepository<T> {
     update,
     options = { new: true },
   }: {
-    filter: Query<any, any>;
+    filter: QueryFilter<any>;
     update: UpdateQuery<T>;
-    options: QueryOptions<T> & ReturnsNewDoc;
+    options?: QueryOptions<T> & ReturnsNewDoc;
   }): Promise<HydratedDocument<T> | null> {
-    return this.model.findOneAndUpdate(filter,  { ...update, $inc: { __v: 1 } }, options);
+    return this.model.findOneAndUpdate(
+      filter,
+      { ...update, $inc: { __v: 1 } },
+      options
+    );
   }
 
   async findByIdAndUpdate({
@@ -163,9 +214,13 @@ export abstract class DataBaseRepository<T> {
   }: {
     _id: Types.ObjectId;
     update: UpdateQuery<T>;
-    options: QueryOptions<T> & ReturnsNewDoc;
+    options?: QueryOptions<T> & ReturnsNewDoc;
   }): Promise<HydratedDocument<T> | null> {
-    return this.model.findByIdAndUpdate(_id,  { ...update, $inc: { __v: 1 } }, options);
+    return this.model.findByIdAndUpdate(
+      _id,
+      { ...update, $inc: { __v: 1 } },
+      options
+    );
   }
   async updateMany({
     filter,
@@ -195,7 +250,7 @@ export abstract class DataBaseRepository<T> {
   async findOneAndDelete({
     filter,
   }: {
-    filter: Query<any, any>;
+    filter: QueryFilter<T>;
   }): Promise<HydratedDocument<T> | null> {
     return this.model.findOneAndDelete(filter);
   }

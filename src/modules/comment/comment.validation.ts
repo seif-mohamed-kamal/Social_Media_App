@@ -1,17 +1,18 @@
 import { z } from "zod";
-import { AvailabilityEnum, ReactionEnum } from "../../common/enum/post.enum";
-import { Types } from "mongoose";
 import { generalValidationFeilds } from "../../common/validation";
 import { fileExtention } from "../../common/utils/multer";
-export const createPostSchema = {
+
+export const createCommentSchema = {
+  params: z.strictObject({
+    postId: generalValidationFeilds.id,
+  }),
   body: z
     .strictObject({
       content: z.string().optional(),
       files: z
         .array(generalValidationFeilds.file(fileExtention.image))
         .optional(),
-      tags: z.array(z.string()).optional(),
-      availability: z.coerce.number().default(AvailabilityEnum.PUBLIC),
+      tags: z.array(generalValidationFeilds.id).optional(),
     })
     .superRefine((args, ctx) => {
       if ((!args.files || args.files.length === 0) && !args.content) {
@@ -30,35 +31,29 @@ export const createPostSchema = {
             message: "dublicated tags",
           });
         }
-        for (const tag of args.tags) {
-          if (!Types.ObjectId.isValid(tag)) {
-            ctx.addIssue({
-              code: "custom",
-              path: ["tags"],
-              message: "Invalid ObjectId",
-            });
-          }
-        }
       }
     }),
 };
 
-export const reactPostSchema = {
+export const createReplyCommentSchema = {
   params: z.strictObject({
     postId: generalValidationFeilds.id,
+    commentId: generalValidationFeilds.id,
   }),
-
-  query: z.strictObject({
-    react: z.coerce
-      .number()
-      .pipe(z.enum(ReactionEnum)),
-  }),
-};
-export const updatePostSchema = {
-  params: z.strictObject({ postId: generalValidationFeilds.id }),
-  body: createPostSchema.body,
+  body:createCommentSchema.body
 };
 
-export const deletePostSchema = {
-  params: z.strictObject({ postId: generalValidationFeilds.id }),
+export const updateCommentSchema = {
+  params: z.strictObject({
+    commentId: generalValidationFeilds.id,
+  }),
+  body:createCommentSchema.body
+};
+
+export const deleteCommentSchema = {
+  params: z.strictObject({
+    commentId: generalValidationFeilds.id,
+    postId: generalValidationFeilds.id,
+
+  }),
 };
