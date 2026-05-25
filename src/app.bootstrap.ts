@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from "express";
-import { authRouter, userRouter } from "./modules";
-import { globalErrorHandling } from "./middleware";
+import { authRouter, schema, userRouter } from "./modules";
+import { authintication, globalErrorHandling } from "./middleware";
 import { port } from "./config/config.service";
 import { connectToDB } from "./DB";
 import { notificationService, redisService, s3Service } from "./common/service";
@@ -10,6 +10,7 @@ const writePipeLine = promisify(pipeline);
 import cors from "cors";
 import { successResponse } from "./common/response";
 import { postRouter } from "./modules/post";
+import { createHandler } from "graphql-http/lib/use/express";
 
 const bootstrap = async () => {
   const app: express.Express = express();
@@ -24,6 +25,14 @@ const bootstrap = async () => {
   app.use("/auth", authRouter);
   app.use("/user", userRouter);
   app.use("/post", postRouter);
+  app.all(
+    "/graphql",
+    authintication(),
+    createHandler({
+      schema: schema,
+      context: (req) => ({ user: req.raw.user, decoded: req.raw.decoded }),
+    })
+  );
 
   //view picture & download
   app.get(
@@ -75,7 +84,7 @@ const bootstrap = async () => {
       res: express.Response,
       next: express.NextFunction
     ) => {
-      console.log({token:req.body.token})
+      console.log({ token: req.body.token });
       await notificationService.sendNotification({
         token: req.body.token,
         data: {
@@ -86,7 +95,7 @@ const bootstrap = async () => {
       return res.json({ message: "hello from notification" });
     }
   );
-  
+
   app.get(
     "/",
     (

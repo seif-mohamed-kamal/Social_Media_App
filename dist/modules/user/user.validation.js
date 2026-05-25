@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updatePasswordSchema = void 0;
+exports.profileGQL = exports.updatePasswordSchema = void 0;
 const zod_1 = require("zod");
 const validation_1 = require("../../common/validation");
 exports.updatePasswordSchema = {
@@ -15,3 +15,6 @@ exports.updatePasswordSchema = {
         path: ["confirmPassword"],
     }),
 };
+exports.profileGQL = zod_1.z.strictObject({
+    search: zod_1.z.string().min(2).optional(),
+});

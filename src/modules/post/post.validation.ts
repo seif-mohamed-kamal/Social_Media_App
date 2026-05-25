@@ -62,3 +62,8 @@ export const updatePostSchema = {
 export const deletePostSchema = {
   params: z.strictObject({ postId: generalValidationFeilds.id }),
 };
+
+export const reactOnPostGQL = z.strictObject({
+  postId: generalValidationFeilds.id,
+  react: z.coerce.number().pipe(z.enum(ReactionEnum)),
+});

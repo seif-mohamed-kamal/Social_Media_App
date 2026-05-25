@@ -25,7 +25,7 @@ import { randomUUID } from "crypto";
 import { AvailabilityEnum } from "../../common/enum/post.enum";
 import { paginateDTO } from "../../common/validation";
 
-class PostService {
+export class PostService {
   private readonly userModel: userRepository;
   private readonly redis: RedisService;
   private readonly postModel: postRepository;
@@ -132,67 +132,67 @@ class PostService {
     return posts;
   }
 
-  public async reactPost(
-    { postId }: reactPostParamsDTO,
-    { react }: reactPostQuetyDTO,
-    user: HydratedDocument<IUser>
-  ): Promise<IPost> {
-  
-    const post = await this.postModel.findOne({
-      filter:{
-      _id: postId,
-  
-      $or: [
-        { availability: AvailabilityEnum.PUBLIC },
-  
-        {
-          availability: AvailabilityEnum.ONLY_ME,
-          createdBy: user._id,
-        },
-  
-        {
-          availability: AvailabilityEnum.PRIVATE,
-          createdBy: {
-            $in: [user._id, ...(user.freinds || [])],
+    public async reactPost(
+      { postId }: reactPostParamsDTO,
+      { react }: reactPostQuetyDTO,
+      user: HydratedDocument<IUser>
+    ): Promise<IPost> {
+    
+      const post = await this.postModel.findOne({
+        filter:{
+        _id: postId,
+    
+        $or: [
+          { availability: AvailabilityEnum.PUBLIC },
+    
+          {
+            availability: AvailabilityEnum.ONLY_ME,
+            createdBy: user._id,
           },
-        },
-  
-        {
-          tags: { $in: [user._id] },
-        },
-      ],
-    }
-    });
-  
-    if (!post) throw new NotFoundException("post not found");
-  
-    const newReact = Number(react);
-    post.reactions ??= [];
-
-    const reactions = post.reactions!;
     
-    const index = reactions.findIndex(
-      (r) => r.userId.toString() === user._id.toString()
-    );
+          {
+            availability: AvailabilityEnum.PRIVATE,
+            createdBy: {
+              $in: [user._id, ...(user.freinds || [])],
+            },
+          },
     
-    if (index !== -1) {
-      const existing = reactions[index]!;
-    
-      if (existing.react === newReact) {
-        reactions.splice(index, 1);
-      } else {
-        reactions[index]!.react = newReact;
+          {
+            tags: { $in: [user._id] },
+          },
+        ],
       }
-    } else {
-      reactions.push({
-        userId: user._id,
-        react: newReact,
       });
+    
+      if (!post) throw new NotFoundException("post not found");
+    
+      const newReact = Number(react);
+      post.reactions ??= [];
+
+      const reactions = post.reactions!;
+      
+      const index = reactions.findIndex(
+        (r) => r.userId.toString() === user._id.toString()
+      );
+      
+      if (index !== -1) {
+        const existing = reactions[index]!;
+      
+        if (existing.react === newReact) {
+          reactions.splice(index, 1);
+        } else {
+          reactions[index]!.react = newReact;
+        }
+      } else {
+        reactions.push({
+          userId: user._id,
+          react: newReact,
+        });
+      }
+      await post.save();
+    
+      return post.toJSON();
     }
-    await post.save();
-  
-    return post.toJSON();
-  }
   public async updatePost(
     { postId }: updatePostDTOParams,
     { content, files = [], tags }: createPostDtoBody,

@@ -13,3 +13,7 @@ export const updatePasswordSchema = {
       path: ["confirmPassword"],
     }),
 };
+
+export const profileGQL=z.strictObject({
+  search:z.string().min(2).optional(),
+});

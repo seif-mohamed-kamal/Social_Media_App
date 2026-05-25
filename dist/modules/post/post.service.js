@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.PostService = void 0;
 const mongoose_1 = require("mongoose");
 const repository_1 = require("../../DB/repository");
 const service_1 = require("../../common/service");
@@ -231,4 +232,5 @@ class PostService {
         return post.toJSON();
     }
 }
+exports.PostService = PostService;
 exports.default = new PostService();

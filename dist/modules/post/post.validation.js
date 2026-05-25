@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deletePostSchema = exports.updatePostSchema = exports.reactPostSchema = exports.createPostSchema = void 0;
+exports.reactOnPostGQL = exports.deletePostSchema = exports.updatePostSchema = exports.reactPostSchema = exports.createPostSchema = void 0;
 const zod_1 = require("zod");
 const post_enum_1 = require("../../common/enum/post.enum");
 const mongoose_1 = require("mongoose");
@@ -62,3 +62,7 @@ exports.updatePostSchema = {
 exports.deletePostSchema = {
     params: zod_1.z.strictObject({ postId: validation_1.generalValidationFeilds.id }),
 };
+exports.reactOnPostGQL = zod_1.z.strictObject({
+    postId: validation_1.generalValidationFeilds.id,
+    react: zod_1.z.coerce.number().pipe(zod_1.z.enum(post_enum_1.ReactionEnum)),
+});

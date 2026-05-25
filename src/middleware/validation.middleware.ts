@@ -1,6 +1,9 @@
 import { NextFunction, Request, Response } from "express";
 import { ZodError, ZodType } from "zod";
-import { BadRequestException } from "../common/exceptions/domain.exception";
+import {
+  BadRequestException,
+  MapGraphQLError,
+} from "../common/exceptions/domain.exception";
 
 type keyReqType = keyof Request;
 type schemaType = Partial<Record<keyReqType, ZodType>>;
@@ -17,12 +20,12 @@ export const validation = (schema: schemaType) => {
     const issues: issueType = [];
     for (const key of Object.keys(schema) as keyReqType[]) {
       if (!schema[key]) continue;
-      if(req.file){
-        req.body.file = req.file
+      if (req.file) {
+        req.body.file = req.file;
       }
-      if(req.files){
+      if (req.files) {
         // console.log(req.files)
-        req.body.files = req.files
+        req.body.files = req.files;
       }
       const validationResult = schema[key].safeParse(req[key]);
       if (!validationResult.success) {
@@ -40,4 +43,26 @@ export const validation = (schema: schemaType) => {
     }
     next();
   };
+};
+
+export const GQLValidation = async <T>(
+  schema: ZodType,
+  args: T
+): Promise<boolean> => {
+  const validationResult = schema.safeParse(args);
+
+  if (!validationResult.success) {
+    const formattedIssues = validationResult.error.issues.map((issue) => ({
+      path: issue.path,
+      message: issue.message,
+    }));
+
+    throw MapGraphQLError(
+      new BadRequestException("Validation Error", {
+        cause: formattedIssues,
+      })
+    );
+  }
+
+  return true;
 };

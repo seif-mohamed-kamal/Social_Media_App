@@ -15,7 +15,7 @@ import {
 import { logoutEnum } from "../../common/enum";
 import { comapareeHash, generateHash } from "../../common/utils/security";
 
-class userService {
+export class userService {
   private readonly userModel: userRepository;
   private readonly redis: RedisService;
   private readonly tokenService: TokenService;

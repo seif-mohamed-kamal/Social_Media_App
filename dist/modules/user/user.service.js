@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.userService = void 0;
 const service_1 = require("../../common/service");
 const repository_1 = require("../../DB/repository");
 const token_service_1 = require("../../common/service/token.service");
@@ -106,4 +107,5 @@ class userService {
         return account;
     }
 }
+exports.userService = userService;
 exports.default = new userService();

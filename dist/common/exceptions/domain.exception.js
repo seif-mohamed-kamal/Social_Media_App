@@ -1,7 +1,16 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.UnauthorizedException = exports.ForbiddenException = exports.ConflictException = exports.NotFoundException = exports.BadRequestException = void 0;
+exports.UnauthorizedException = exports.ForbiddenException = exports.ConflictException = exports.NotFoundException = exports.BadRequestException = exports.MapGraphQLError = void 0;
+const graphql_1 = require("graphql");
 const application_exception_1 = require("./application.exception");
+const MapGraphQLError = (error) => {
+    throw new graphql_1.GraphQLError(error.message || "internal server error", {
+        extensions: {
+            statusCode: error.statusCode,
+        },
+    });
+};
+exports.MapGraphQLError = MapGraphQLError;
 class BadRequestException extends application_exception_1.ApplicationException {
     constructor(message = "BadRequestException", options) {
         super(message, 400, options);

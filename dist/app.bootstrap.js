@@ -15,6 +15,7 @@ const writePipeLine = (0, node_util_1.promisify)(node_stream_1.pipeline);
 const cors_1 = __importDefault(require("cors"));
 const response_1 = require("./common/response");
 const post_1 = require("./modules/post");
+const express_2 = require("graphql-http/lib/use/express");
 const bootstrap = async () => {
     const app = (0, express_1.default)();
     app.use((0, cors_1.default)(), express_1.default.json());
@@ -23,6 +24,10 @@ const bootstrap = async () => {
     app.use("/auth", modules_1.authRouter);
     app.use("/user", modules_1.userRouter);
     app.use("/post", post_1.postRouter);
+    app.all("/graphql", (0, middleware_1.authintication)(), (0, express_2.createHandler)({
+        schema: modules_1.schema,
+        context: (req) => ({ user: req.raw.user, decoded: req.raw.decoded }),
+    }));
     app.get("/upload/*path", async (req, res, next) => {
         const { download, fileName } = req.query;
         const { path } = req.params;
