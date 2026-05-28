@@ -55,16 +55,6 @@ export const onePostType = new GraphQLObjectType({
   },
 });
 
-// export const PostPaginationResponse = new GraphQLObjectType({
-//   name: "PostPaginationResponse",
-//   fields: {
-//     docs: { type: new GraphQLList(onePostType) },
-//     currentPage: { type: GraphQLString },
-//     pages: { type: GraphQLString },
-//     size: { type: GraphQLString },
-//   },
-// });
-
 export const postList = new GraphQLObjectType({
   name: "PostListResponse",
 
