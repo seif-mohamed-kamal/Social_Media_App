@@ -6,11 +6,12 @@ import { TokenTypeEnum } from "../../common/enum";
 import { validation } from "../../middleware/validation.middleware";
 import * as validators from "./user.validation";
 import { cloudUpload, fileExtention } from "../../common/utils/multer";
+import { chatRouter } from "../chat";
 
 const router = Router();
-
+router.use("/:userId/chat", chatRouter);
 router.get(
-  "/profile",
+  "/",
   authintication(),
   async (req: Request, res: Response, next: NextFunction) => {
     const result = await userService.profile(req.user);

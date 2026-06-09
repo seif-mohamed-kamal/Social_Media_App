@@ -47,7 +47,7 @@ class UserGQLSchema {
         return {
             Profile: {
                 type: UserGQLTypes.profile,
-                description: "test profile point",
+                description: "profile",
                 args: UserGQLArgs.profile,
                 resolve: this.userResolver.profile,
             },
@@ -57,9 +57,8 @@ class UserGQLSchema {
         return {
             like: {
                 type: graphql_1.GraphQLString,
-                description: "test welcome point",
                 resolve: () => {
-                    return "Hi there! Welcome to our API.";
+                    return "welcome mutation";
                 },
             },
         };

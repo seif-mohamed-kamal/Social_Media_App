@@ -1,12 +1,12 @@
 import { HydratedDocument } from "mongoose";
-import { IUser } from "../../common/interface";
+import { IChat, IUser } from "../../common/interface";
 import {
   redisService,
   RedisService,
   s3Service,
   S3Service,
 } from "../../common/service";
-import { userRepository } from "../../DB/repository";
+import { chatRepository, userRepository } from "../../DB/repository";
 import { TokenService } from "../../common/service/token.service";
 import {
   ConflictException,
@@ -14,22 +14,31 @@ import {
 } from "../../common/exceptions/domain.exception";
 import { logoutEnum } from "../../common/enum";
 import { comapareeHash, generateHash } from "../../common/utils/security";
+import { chatEnum } from "../../common/enum/chat.enum";
 
 export class userService {
   private readonly userModel: userRepository;
+  private readonly chatModel: chatRepository;
   private readonly redis: RedisService;
   private readonly tokenService: TokenService;
   private readonly s3: S3Service;
 
   constructor() {
     this.userModel = new userRepository();
+    this.chatModel = new chatRepository();
     this.redis = redisService;
     this.s3 = s3Service;
     this.tokenService = new TokenService();
   }
 
-  async profile(user: HydratedDocument<IUser>): Promise<any> {
-    return user;
+  async profile(user: HydratedDocument<IUser>): Promise<{user:IUser , groups:HydratedDocument<IChat>[]}> {
+    const groups = await this.chatModel.find({
+      filter:{
+        participants:{$in:[user._id]},
+        type:chatEnum.ovm
+      }
+    })
+    return {user:user.toJSON() , groups};
   }
 
   async rotateToken(

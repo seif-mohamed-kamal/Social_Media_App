@@ -3,3 +3,4 @@ export * from "./post.intedface"
 export * from "./comment.interface"
 export * from "./paginate.interface"
 export * from "./reaction.interface"
+export * from "./chat.interface";

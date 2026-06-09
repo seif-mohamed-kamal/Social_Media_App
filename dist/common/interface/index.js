@@ -19,3 +19,4 @@ __exportStar(require("./post.intedface"), exports);
 __exportStar(require("./comment.interface"), exports);
 __exportStar(require("./paginate.interface"), exports);
 __exportStar(require("./reaction.interface"), exports);
+__exportStar(require("./chat.interface"), exports);

@@ -17,6 +17,8 @@ class DataBaseRepository {
         const doc = this.model.findOne(filter, projection);
         if (options?.lean)
             doc.lean(options.lean);
+        if (options?.populate)
+            doc.populate(options.populate);
         return await doc.exec();
     }
     async find({ filter, projection, options, }) {
@@ -65,8 +67,11 @@ class DataBaseRepository {
     async updateOne({ filter, update, options, }) {
         return this.model.updateOne(filter, { ...update, $inc: { __v: 1 } }, options);
     }
-    async findOneAndUpdate({ filter, update, options = { new: true }, }) {
-        return this.model.findOneAndUpdate(filter, { ...update, $inc: { __v: 1 } }, options);
+    async findOneAndUpdate({ filter, update, options = { returnDocument: "after" }, }) {
+        return this.model.findOneAndUpdate(filter, {
+            ...update,
+            $inc: { __v: 1 },
+        }, options);
     }
     async findByIdAndUpdate({ _id, update, options = { new: true }, }) {
         return this.model.findByIdAndUpdate(_id, { ...update, $inc: { __v: 1 } }, options);

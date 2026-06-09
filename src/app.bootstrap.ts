@@ -11,6 +11,8 @@ import cors from "cors";
 import { successResponse } from "./common/response";
 import { postRouter } from "./modules/post";
 import { createHandler } from "graphql-http/lib/use/express";
+import { realtimeGateway } from "./modules/realTime";
+import { chatRouter } from "./modules/chat";
 
 const bootstrap = async () => {
   const app: express.Express = express();
@@ -25,6 +27,7 @@ const bootstrap = async () => {
   app.use("/auth", authRouter);
   app.use("/user", userRouter);
   app.use("/post", postRouter);
+  app.use("/chat", chatRouter);
   app.all(
     "/graphql",
     authintication(),
@@ -108,9 +111,12 @@ const bootstrap = async () => {
   );
 
   app.use(globalErrorHandling);
-  app.listen(port, () => {
-    console.log(`App running successfully on port ${port}`);
+  const httpServer = app.listen(port, () => {
+    console.log(`Server is running on port ${port} 🚀`);
   });
+
+  //Initialize Socket.io
+  await realtimeGateway.initializeIo(httpServer);
 };
 
 export default bootstrap;

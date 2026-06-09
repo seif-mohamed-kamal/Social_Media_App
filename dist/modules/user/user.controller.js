@@ -44,8 +44,10 @@ const enum_1 = require("../../common/enum");
 const validation_middleware_1 = require("../../middleware/validation.middleware");
 const validators = __importStar(require("./user.validation"));
 const multer_1 = require("../../common/utils/multer");
+const chat_1 = require("../chat");
 const router = (0, express_1.Router)();
-router.get("/profile", (0, middleware_1.authintication)(), async (req, res, next) => {
+router.use("/:userId/chat", chat_1.chatRouter);
+router.get("/", (0, middleware_1.authintication)(), async (req, res, next) => {
     const result = await user_service_1.default.profile(req.user);
     return (0, response_1.successResponse)({ res, status: 200, result });
 });

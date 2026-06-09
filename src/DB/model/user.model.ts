@@ -87,7 +87,7 @@ userSchema
   })
   .get(function () {
     return `${this.firstName} ${this.lastName}`;
-  });
+  });  
 
 userSchema.pre(
   "save",
@@ -109,6 +109,7 @@ userSchema.pre(["find", "findOne"], function () {
   } else {
     this.setQuery({ ...query, deletedAt: { $exists: false } });
   }
+  
 });
 
 userSchema.pre(["updateOne", "findOneAndUpdate"], function () {

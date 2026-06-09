@@ -13,7 +13,6 @@ import { HydratedDocument, Types } from "mongoose";
 import { IUser } from "../interface";
 import { RoleEnum, TokenTypeEnum } from "../enum";
 
-
 export class TokenService {
   private readonly userModel: userRepository;
   private readonly redis: RedisService;
@@ -45,7 +44,7 @@ export class TokenService {
     return jwt.verify(token, secret) as JwtPayload;
   }
 
-  private async detectRole(role: RoleEnum ) {
+  private async detectRole(role: RoleEnum) {
     switch (role) {
       case RoleEnum.ADMIN:
         return {
@@ -130,6 +129,13 @@ export class TokenService {
 
     const user = await this.userModel.findOne({
       filter: { _id: verifiedData.sub },
+      options: {
+        populate: [
+          {
+            path: "freinds",
+          },
+        ],
+      },
     });
 
     if (!user) {
@@ -166,7 +172,9 @@ export class TokenService {
       });
     }
 
-    const { accessSignature, refreshSignature } = await this.detectRole(user.role );
+    const { accessSignature, refreshSignature } = await this.detectRole(
+      user.role
+    );
 
     const accessToken = await this.generateToken({
       payload: { sub: user._id },
@@ -193,10 +201,22 @@ export class TokenService {
     return { accessToken, refreshToken };
   }
 
-  public async createRevokeToken ({ userId, jti, ttl } : {userId:Types.ObjectId | string , jti:string , ttl:number}) {
+  public async createRevokeToken({
+    userId,
+    jti,
+    ttl,
+  }: {
+    userId: Types.ObjectId | string;
+    jti: string;
+    ttl: number;
+  }) {
     // console.log(revokeTokenKey({ userId, jti }));
     // console.log({ userId, jti, ttl });
-    await this.redis.set({key:this.redis.revokeTokenKey({ userId, jti }), value:jti, ttl:ttl});
+    await this.redis.set({
+      key: this.redis.revokeTokenKey({ userId, jti }),
+      value: jti,
+      ttl: ttl,
+    });
     return;
-  };
+  }
 }

@@ -74,6 +74,13 @@ class TokenService {
         const verifiedData = await this.verifyToken({ token, secret });
         const user = await this.userModel.findOne({
             filter: { _id: verifiedData.sub },
+            options: {
+                populate: [
+                    {
+                        path: "freinds",
+                    },
+                ],
+            },
         });
         if (!user) {
             throw new Error("User not found");
@@ -121,10 +128,13 @@ class TokenService {
         });
         return { accessToken, refreshToken };
     }
-    async createRevokeToken({ userId, jti, ttl }) {
-        await this.redis.set({ key: this.redis.revokeTokenKey({ userId, jti }), value: jti, ttl: ttl });
+    async createRevokeToken({ userId, jti, ttl, }) {
+        await this.redis.set({
+            key: this.redis.revokeTokenKey({ userId, jti }),
+            value: jti,
+            ttl: ttl,
+        });
         return;
     }
-    ;
 }
 exports.TokenService = TokenService;

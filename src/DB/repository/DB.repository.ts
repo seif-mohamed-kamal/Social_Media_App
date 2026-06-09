@@ -78,6 +78,7 @@ export abstract class DataBaseRepository<T> {
   }): Promise<HydratedDocument<T> | null | FlattenMaps<T>> {
     const doc = this.model.findOne(filter, projection);
     if (options?.lean) doc.lean(options.lean);
+    if (options?.populate) doc.populate(options.populate as any);
     return await doc.exec();
   }
 
@@ -194,15 +195,18 @@ export abstract class DataBaseRepository<T> {
   async findOneAndUpdate({
     filter,
     update,
-    options = { new: true },
+    options = { returnDocument: "after" },
   }: {
     filter: QueryFilter<any>;
     update: UpdateQuery<T>;
-    options?: QueryOptions<T> & ReturnsNewDoc;
+    options?: QueryOptions<T>;
   }): Promise<HydratedDocument<T> | null> {
     return this.model.findOneAndUpdate(
       filter,
-      { ...update, $inc: { __v: 1 } },
+      {
+        ...update,
+        $inc: { __v: 1 },
+      },
       options
     );
   }

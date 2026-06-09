@@ -66,3 +66,23 @@ export const GQLValidation = async <T>(
 
   return true;
 };
+
+export const socketValidation = async <T>(
+  schema: ZodType,
+  args: T
+): Promise<boolean> => {
+  const validationResult = schema.safeParse(args);
+
+  if (!validationResult.success) {
+    const formattedIssues = validationResult.error.issues.map((issue) => ({
+      path: issue.path,
+      message: issue.message,
+    }));
+
+    throw new BadRequestException("Validation Error", {
+      cause: formattedIssues,
+    });
+  }
+
+  return true;
+};

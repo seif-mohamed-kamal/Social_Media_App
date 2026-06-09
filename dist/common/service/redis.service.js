@@ -162,6 +162,24 @@ class RedisService {
     async removeFCMUser(userId) {
         return await this.client.del(await this.FCM_KEY(userId));
     }
+    socketKey(userId) {
+        return `user:sockets:${userId}`;
+    }
+    async addSocket(userId, socketId) {
+        return await this.client.sAdd(this.socketKey(userId), socketId);
+    }
+    async removeSocket(userId, socketId) {
+        return await this.client.sRem(this.socketKey(userId), socketId);
+    }
+    async getSockets(userId) {
+        return await this.client.sMembers(this.socketKey(userId));
+    }
+    async hasSockets(userId) {
+        return await this.client.sCard(this.socketKey(userId));
+    }
+    async removeUser(userId) {
+        return await this.client.del(this.socketKey(userId));
+    }
 }
 exports.RedisService = RedisService;
 exports.redisService = new RedisService();

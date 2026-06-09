@@ -7,19 +7,28 @@ const token_service_1 = require("../../common/service/token.service");
 const domain_exception_1 = require("../../common/exceptions/domain.exception");
 const enum_1 = require("../../common/enum");
 const security_1 = require("../../common/utils/security");
+const chat_enum_1 = require("../../common/enum/chat.enum");
 class userService {
     userModel;
+    chatModel;
     redis;
     tokenService;
     s3;
     constructor() {
         this.userModel = new repository_1.userRepository();
+        this.chatModel = new repository_1.chatRepository();
         this.redis = service_1.redisService;
         this.s3 = service_1.s3Service;
         this.tokenService = new token_service_1.TokenService();
     }
     async profile(user) {
-        return user;
+        const groups = await this.chatModel.find({
+            filter: {
+                participants: { $in: [user._id] },
+                type: chat_enum_1.chatEnum.ovm
+            }
+        });
+        return { user: user.toJSON(), groups };
     }
     async rotateToken(user, issuer, { jti, iat, sub }) {
         if ((iat + 60 * 60 * 24 * 365) * 1000 >= Date.now() + 5 * 60 * 1000) {
