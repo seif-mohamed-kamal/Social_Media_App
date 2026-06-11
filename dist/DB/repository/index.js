@@ -19,3 +19,4 @@ __exportStar(require("./user.repository"), exports);
 __exportStar(require("./comment.repository"), exports);
 __exportStar(require("./post.repository"), exports);
 __exportStar(require("./chat.repository"), exports);
+__exportStar(require("./story.repository"), exports);

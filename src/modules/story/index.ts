@@ -1,0 +1,1 @@
+export {default as stroyRouter} from './story.controller'

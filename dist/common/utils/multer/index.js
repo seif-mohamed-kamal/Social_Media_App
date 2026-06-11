@@ -16,3 +16,4 @@ var __exportStar = (this && this.__exportStar) || function(m, exports) {
 Object.defineProperty(exports, "__esModule", { value: true });
 __exportStar(require("./cloud.multer"), exports);
 __exportStar(require("./validation.multer"), exports);
+__exportStar(require("./localUpload"), exports);

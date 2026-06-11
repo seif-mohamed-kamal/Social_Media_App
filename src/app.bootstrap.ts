@@ -1,5 +1,11 @@
 import express, { NextFunction, Request, Response } from "express";
-import { authRouter, schema, userRouter } from "./modules";
+import {
+  authRouter,
+  notificationRouter,
+  schema,
+  stroyRouter,
+  userRouter,
+} from "./modules";
 import { authintication, globalErrorHandling } from "./middleware";
 import { port } from "./config/config.service";
 import { connectToDB } from "./DB";
@@ -28,6 +34,8 @@ const bootstrap = async () => {
   app.use("/user", userRouter);
   app.use("/post", postRouter);
   app.use("/chat", chatRouter);
+  app.use("/notification", notificationRouter);
+  app.use("/story", stroyRouter);
   app.all(
     "/graphql",
     authintication(),

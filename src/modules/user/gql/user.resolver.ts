@@ -1,4 +1,3 @@
-import { IUser } from "../../../common/interface";
 import { IAuthUser } from "../../../common/types/express.types";
 import { GQLAuthorization } from "../../../middleware";
 import { GQLValidation } from "../../../middleware/validation.middleware";
@@ -19,7 +18,7 @@ export class UserResolver {
       search?: string;
     },
     { user }: IAuthUser,
-  ): Promise<{ message: string; data: IUser }> => {
+): Promise<any> => {
     // authentication
     if (!user) {
       throw new Error("Unauthorized");

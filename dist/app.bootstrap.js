@@ -27,6 +27,8 @@ const bootstrap = async () => {
     app.use("/user", modules_1.userRouter);
     app.use("/post", post_1.postRouter);
     app.use("/chat", chat_1.chatRouter);
+    app.use("/notification", modules_1.notificationRouter);
+    app.use("/story", modules_1.stroyRouter);
     app.all("/graphql", (0, middleware_1.authintication)(), (0, express_2.createHandler)({
         schema: modules_1.schema,
         context: (req) => ({ user: req.raw.user, decoded: req.raw.decoded }),
